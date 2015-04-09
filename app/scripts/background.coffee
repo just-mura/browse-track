@@ -18,6 +18,11 @@ tabChanged = (url) ->
   lst.push(new Date())
   Stat.data[url] = lst
 
+urls = ( url = location.href ) ->
+  domain = document.createElement "dom"
+  domainName.href = url
+  return domainName.hostname
+
 calc = (url)->
   lst = Stat.data[url]
   if not lst
@@ -32,7 +37,10 @@ calc = (url)->
 
 updateBadge = (url)->
   res = calc url
-  chrome.browserAction.setBadgeText({text: "#{res / 1000}"})
+  seconds = Math.floor(res / 1000)
+  minutes = Math.floor(seconds / 60)
+  hours = Math.floor(minutes / 60)
+  chrome.browserAction.setBadgeText({text: "#{hours}:#{minutes % 60}:#{seconds % 60}"})
 
 
 chrome.tabs.onActivated.addListener (activeInfo)->
@@ -41,6 +49,8 @@ chrome.tabs.onActivated.addListener (activeInfo)->
   chrome.tabs.get activeInfo.tabId, (tab) ->
     tabChanged(tab.url) if tab.url
     updateBadge tab.url
+
+
 
 chrome.alarms.onAlarm.addListener (alarm)->
   console.log alarm, Stat.curTabId
@@ -52,5 +62,5 @@ chrome.alarms.onAlarm.addListener (alarm)->
       if tab.url
         updateBadge tab.url
 
-chrome.alarms.create("update", {periodInMinutes: 0.1})
+chrome.alarms.create("update", {periodInSeconds: 1})
 console.log('\'Allo \'Allo! Event Page for Browser Action')
